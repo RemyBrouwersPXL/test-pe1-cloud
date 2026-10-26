@@ -1,0 +1,133 @@
+services:
+  # ----------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: gearbids-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: gearbids
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gearbids"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------------------
+  # Auction Core Microservice (Port 5000)
+  # ----------------------------------------------------------------------------
+  auction-service:
+    build: ./services/auction-service
+    container_name: gearbids-auction-service
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgrespassword
+      DB_NAME: gearbids
+      NOTIFICATIONS_SERVICE_URL: http://notification-service:5001
+      INSPECTIONS_SERVICE_URL: http://inspection-service:5002
+      INTERNAL_SERVICE_TOKEN: gearbids-internal-service-token-dev
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:80,http://127.0.0.1:3000
+      COOKIE_SECURE: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # Notification Microservice (Port 5001)
+  # ----------------------------------------------------------------------------
+  notification-service:
+    build: ./services/notification-service
+    container_name: gearbids-notification-service
+    restart: always
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: 5001
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgrespassword
+      DB_NAME: gearbids
+      INTERNAL_SERVICE_TOKEN: gearbids-internal-service-token-dev
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:80,http://127.0.0.1:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # Vehicle Inspection Microservice (Port 5002)
+  # ----------------------------------------------------------------------------
+  inspection-service:
+    build: ./services/inspection-service
+    container_name: gearbids-inspection-service
+    restart: always
+    ports:
+      - "5002:5002"
+    environment:
+      PORT: 5002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgrespassword
+      DB_NAME: gearbids
+      INTERNAL_SERVICE_TOKEN: gearbids-internal-service-token-dev
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:80,http://127.0.0.1:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # Bidding & Auction Lifecycle Worker Microservice (Port 5003 metrics)
+  # ----------------------------------------------------------------------------
+  bidding-worker-service:
+    build: ./services/bidding-worker-service
+    container_name: gearbids-bidding-worker
+    restart: always
+    ports:
+      - "5003:5003"
+    environment:
+      WORKER_PORT: 5003
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgrespassword
+      DB_NAME: gearbids
+      INTERNAL_SERVICE_TOKEN: gearbids-internal-service-token-dev
+      NOTIFICATIONS_SERVICE_URL: http://notification-service:5001
+      CHECK_INTERVAL_SECONDS: 2
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------------
+  # Frontend Application (Port 3000)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build: ./frontend
+    container_name: gearbids-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - auction-service
+      - notification-service
+      - inspection-service
+
+volumes:
+  pgdata:

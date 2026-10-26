@@ -1,0 +1,12 @@
+{
+  "name": "gearbids-platform",
+  "version": "1.0.0",
+  "description": "Cloud-Native AWS Microservices Car Auction Platform for Computer Science Evaluation",
+  "scripts": {
+    "test": "npm --prefix services/auction-service test && npm --prefix services/notification-service test",
+    "build": "npm --prefix frontend run build && npm --prefix services/auction-service run build && npm --prefix services/notification-service run build",
+    "package": "./devops/scripts/package-services.sh"
+  },
+  "author": "Cloud Expert Evaluation",
+  "license": "ISC"
+}
