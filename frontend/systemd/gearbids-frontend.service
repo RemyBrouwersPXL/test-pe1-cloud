@@ -1,0 +1,13 @@
+[Unit]
+Description=GearBids Frontend Nginx / Static Server
+After=network.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/systemctl reload nginx
+ExecReload=/usr/bin/systemctl reload nginx
+
+[Install]
+WantedBy=multi-user.target

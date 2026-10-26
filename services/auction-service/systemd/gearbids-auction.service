@@ -1,0 +1,26 @@
+[Unit]
+Description=GearBids Auction Core Microservice (Spring Boot 4)
+After=network.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gearbids
+Group=gearbids
+WorkingDirectory=/opt/gearbids/services/auction-service
+EnvironmentFile=-/etc/gearbids/auction-service.env
+Environment=PORT=5000
+ExecStart=/usr/bin/java -jar /opt/gearbids/services/auction-service/gearbids-auction-service.jar
+Restart=always
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gearbids-auction
+
+# Security sandbox
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

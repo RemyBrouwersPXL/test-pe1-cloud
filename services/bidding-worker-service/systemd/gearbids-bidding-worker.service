@@ -1,0 +1,27 @@
+[Unit]
+Description=GearBids Bidding and Auction Lifecycle Worker Service
+After=network.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gearbids
+Group=gearbids
+WorkingDirectory=/opt/gearbids/services/bidding-worker-service
+EnvironmentFile=-/etc/gearbids/bidding-worker.env
+Environment=PYTHONUNBUFFERED=1
+Environment=WORKER_PORT=5003
+ExecStart=/opt/gearbids/venv/bin/python3 worker.py
+Restart=always
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gearbids-worker
+
+# Security sandbox
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

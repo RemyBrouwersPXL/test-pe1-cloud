@@ -1,0 +1,27 @@
+[Unit]
+Description=GearBids Outbid and Event Notification Microservice
+After=network.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gearbids
+Group=gearbids
+WorkingDirectory=/opt/gearbids/services/notification-service
+EnvironmentFile=-/etc/gearbids/notification-service.env
+Environment=NODE_ENV=production
+Environment=PORT=5001
+ExecStart=/usr/bin/node dist/server.js
+Restart=always
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gearbids-notification
+
+# Security sandbox
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

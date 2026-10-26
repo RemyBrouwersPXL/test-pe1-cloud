@@ -1,0 +1,26 @@
+server:
+  port: 0
+  servlet:
+    session:
+      cookie:
+        name: gearbids.sid
+
+spring:
+  application:
+    name: gearbids-auction-service-test
+  datasource:
+    url: jdbc:h2:mem:gearbids;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;NON_KEYWORDS=YEAR
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      mode: always
+
+app:
+  services:
+    notifications-url: http://localhost:5001
+    inspections-url: http://localhost:5002
+  security:
+    internal-service-token: test-token
+    allowed-origins: http://localhost:3000
